@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+import pickle # For High Score
 from pygame.locals import *
 
 # Directions.
@@ -27,6 +28,13 @@ pygame.display.set_caption("Snake")
 mainClock = pygame.time.Clock()
 
 mainFont = pygame.font.SysFont(None,30)
+
+# Get the best score.
+try :
+    with open("score.dat","rb") as file:
+        bestScore = pickle.load(file)
+except:
+    bestScore = 0
 
 # The food class.
 class Food(pygame.sprite.Sprite):
@@ -106,6 +114,10 @@ class Snake(pygame.sprite.Sprite):
         
         
 def terminate():
+    #Save the best score
+    with open("score.dat","wb") as file:
+        pickle.dump(bestScore,file)
+        
     pygame.quit()
     sys.exit()
 
@@ -148,7 +160,6 @@ def Draw(snake):
     
 
 def Input(snake):
-    print(1)
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_UP or event.key == K_w:
@@ -176,6 +187,7 @@ def Input(snake):
 food = Food(10+20*random.randint(2,26),10+20*random.randint(2,26))
 
 def main():
+    global bestScore
     while True:
         # Initialize the snake.
         snake = Snake(WIDTH//2+10,HEIGHT//2+10)
@@ -191,8 +203,13 @@ def main():
             Draw(snake)
             Input(snake)
             if not snake.move():
+                if snake.length > bestScore:
+                    bestScore = snake.length
+                windowSurface.fill(BLACK)
                 drawText("You lost",WIDTH//2,HEIGHT//2,mainFont)
+                drawText(f"Best score: {bestScore}",WIDTH//2, HEIGHT//2 + 30,mainFont)
                 pygame.display.update()
+                
                 waitForKey()
                 break
             mainClock.tick(10)
