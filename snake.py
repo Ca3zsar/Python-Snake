@@ -49,8 +49,9 @@ class Snake(pygame.sprite.Sprite):
         self.dir = UP
     def draw(self):
         for i in range(self.length):
-            bodyRect = pygame.Rect(self.bodyX[i],self.bodyY[i],20,20)
-            pygame.draw.rect(windowSurface,GREEN,bodyRect)
+            if self.bodyX[i] != None:
+                bodyRect = pygame.Rect(self.bodyX[i],self.bodyY[i],20,20)
+                pygame.draw.rect(windowSurface,GREEN,bodyRect)
     def move(self):
         
         prevX = self.bodyX[0]
@@ -78,12 +79,12 @@ class Snake(pygame.sprite.Sprite):
         # Check if the head exits the board, if so, put it in the opposite margin.
         if self.headX >= WIDTH - 50:
             self.headX = 50
-        if self.headX <= 50:
-            self.headX = WIDTH - 50
+        if self.headX < 50:
+            self.headX = WIDTH - 70
         if self.headY >= HEIGHT - 50:
             self.headY = 50
-        if self.headY <= 50:
-            self.headY = HEIGHT - 50
+        if self.headY < 50:
+            self.headY = HEIGHT - 70
             
         # If the snake has bitten himself, restart the game.
         for i in range(self.length):
@@ -92,10 +93,13 @@ class Snake(pygame.sprite.Sprite):
         
         global food
         
-        if self.headX == food.x and self.bodyY == food.y:
+        if pygame.Rect(self.headX,self.headY,20,20).colliderect(pygame.Rect(food.x,food.y,10,10)):
             self.length += 1
-            food.x = 10+random.randint(2,27)
-            food.y = 10+random.randint(2,27)
+            food.x = 10+random.randint(2,26)*20
+            food.y = 10+random.randint(2,26)*20
+            self.bodyX.append(None)
+            self.bodyY.append(None)
+            
             
         return True
 
@@ -149,23 +153,27 @@ def Input(snake):
         if event.type == KEYDOWN:
             if event.key == K_UP or event.key == K_w:
                 print("UP")
-                snake.dir = UP
+                if snake.dir != DOWN:
+                    snake.dir = UP
             if event.key == K_DOWN or event.key == K_s:
                 print("DOWN")
-                snake.dir = DOWN
+                if snake.dir != UP:
+                    snake.dir = DOWN
             if event.key == K_LEFT or event.key == K_a:
                 print("LEFT")
-                snake.dir = LEFT
+                if snake.dir != RIGHT:
+                    snake.dir = LEFT
             if event.key == K_RIGHT or event.key == K_d:
                 print("RIGHT")
-                snake.dir = RIGHT
+                if snake.dir != LEFT:
+                    snake.dir = RIGHT
             if event.key == K_ESCAPE:
                 print("terminate")
                 terminate()
         if event.type == QUIT:
             terminate()
 
-food = Food(10+20*random.randint(2,27),10+20*random.randint(2,27))
+food = Food(10+20*random.randint(2,26),10+20*random.randint(2,26))
 
 def main():
     while True:
@@ -184,6 +192,7 @@ def main():
             Input(snake)
             if not snake.move():
                 drawText("You lost",WIDTH//2,HEIGHT//2,mainFont)
+                pygame.display.update()
                 waitForKey()
                 break
             mainClock.tick(10)
